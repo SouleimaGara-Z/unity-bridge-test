@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Unity WebView Bridge Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      text-align: center;
+      background-color: white;
+      margin: 0;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      transition: transform 0.05s, background-color 0.2s;
+    }
+    button:active {
+      background-color: #0056b3;
+      transform: scale(0.96);
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+    }
+    input[type="text"] {
+      padding: 0.5em;
+      font-size: 16px;
+      width: 80%;
+      max-width: 300px;
+      margin-bottom: 1em;
+    }
+    #unityLog {
+      margin-top: 2em;
+      text-align: left;
+      padding: 1em;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Unity WebView Bridge</h1>
+
+  <p>Send a message to Unity:</p>
+  <input type="text" id="messageInput" placeholder="Type your message here" />
+  <button id="sendBtn">Send</button>
+
+  <br /><br />
+  <button id="closeBtn">Close</button>
+
+  <div id="unityLog">
+    <strong>Unity Logs:</strong><br/>
+  </div>
+
+  <script type="module">
+    function appendToUnityLog(text) {
+      const log = document.getElementById("unityLog");
+      const p = document.createElement("p");
+      p.textContent = text;
+      log.appendChild(p);
+    }
+
+    function sendMessageToUnity() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (message.length > 0) {
+        const payload = {
+          type: 'message',
+          data: message
+        };
+        console.log(JSON.stringify(payload));
+        if (typeof window.postMessageToUnity === 'function') {
+          window.postMessageToUnity(payload);
+        }
+        appendToUnityLog(`Sent to Unity: ${JSON.stringify(payload)}`);
+        input.value = '';
+      }
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessageToUnity);
+    document.getElementById('messageInput').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        sendMessageToUnity();
+      }
+    });
+
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      const msg = { type: 'close', data: '' };
+      console.log(JSON.stringify(msg));
+      if (typeof window.postMessageToUnity === 'function') {
+        window.postMessageToUnity(msg);
+      }
+      appendToUnityLog(`Sent to Unity: ${JSON.stringify(msg)}`);
+    });
+
+    window.onUnityMessage = function(message) {
+      appendToUnityLog(`Received from Unity: ${message}`);
+    };
+  </script>
+</body>
+</html>
